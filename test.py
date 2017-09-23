@@ -3,7 +3,7 @@ from symexec import *
 from z3 import *
 
 def find_hook(engine, state):
-    print "[*] adding constaints to current state"
+    print "[*] adding constraints to current state"
     engine.Restore_State(state)
     rax = engine.get_reg_symvar("rax")
     engine.Add_Constraint(rax == 16)
@@ -56,9 +56,10 @@ engine.store_reg_symvar("rdx", rdx)
 rax = BitVec("init_rax", engine.bits)
 engine.store_reg_symvar("rax", rax)
 # engine.Add_Constraint([rsi == 3, rdx == 2])
-engine.Add_Constraint(Or(rsi == 2, rsi == 3))
+# engine.Add_Constraint(Or(rsi == 2, rsi == 3))
 # engine.Add_Constraint([rsi > 0, rdx == 2])
-print "assersions: %s" % str(engine.Assertions())
+engine.Add_Constraint(rsi == 3)
+print "assertions: %s" % str(engine.Assertions())
 print ""
 
 find = [0x14]
@@ -69,9 +70,9 @@ SuccessStates = start_Execution_Loop(engine, find=find, avoid=avoid)
 print ""
 for S in SuccessStates:
     print "-"*40
-    print "[*] loading assersions which leads success state. let's check it is sat"
+    print "[*] loading assertions which leads success state. let's check it is sat"
     load_Assersions(engine, S)
-    print "[*] adding constaints to current state"
+    print "[*] adding constraints to current state"
     rax = engine.get_reg_symvar("rax")
     new_constraints = [rax == 16]
     print new_constraints
@@ -82,7 +83,7 @@ for S in SuccessStates:
     check_res = engine.Check()
     print check_res
     if not check_res == unsat:
-        print "[*] solusion for (rsi, rdx, rax):"
+        print "[*] solution for (rsi, rdx, rax):"
         m = engine.Get_Model()
         # print m
         print "rsi = " + str(m[rsi])

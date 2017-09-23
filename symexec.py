@@ -11,7 +11,7 @@ class arch(): # Base Architecture Class
     solver = None           # z3 solver instance
     _id = 0
 
-    # Instuction Fields (TDOO: Enum)
+    # Instruction Fields (TDOO: Enum)
     FIELD_INST_ADDR = 0     # instruction address
     FIELD_INST_SIZE = 1     # instruction byte size
     FIELD_INST_NAME = 2     # instruction name
@@ -122,9 +122,9 @@ class arch(): # Base Architecture Class
         return (pc, prev_pc, self.Assertions(), copy.copy(self.constrained_regs), copy.copy(self.constrained_flags))
 
 class x64(arch):
-    # architecture dependants
+    # architecture dependents
     bits = 64
-    # REGS = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi"] # register number prefered. but register name is kind for beginners
+    # REGS = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi"] # register number preferred. but register name is kind for beginners
     # FLAGS = ["ZF"]
 
     def inst_add(self, dst, src): # src type is symvar or int
@@ -257,7 +257,7 @@ class x64(arch):
     }
 
     def Exec(self, inst, state):
-        # NOTE: I'm Concidering only registers and immediate values now
+        # NOTE: I'm Considering only registers and immediate values now
         pc = state[self.FIELD_STATE_CURRPC]
         self.Restore_State(state)
         inst_name = inst[self.FIELD_INST_NAME]
@@ -316,7 +316,7 @@ class x64(arch):
             return [(pc + inst[self.FIELD_INST_SIZE], pc, 
                 state[self.FIELD_STATE_ASSERT], self.constrained_regs, self.constrained_flags)] # without copy
         else:
-            raise NotImplementedError("unsopported instrunction: %s" % str(inst))
+            raise NotImplementedError("unsupported instruction: %s" % str(inst))
 
 def KLEE_like_heuristic(StateList):
     print "[!] implement me correctly!!"
@@ -379,7 +379,7 @@ def start_Execution_Loop(engine, find, avoid, find_hook=None):
         p = S[arch.FIELD_STATE_CURRPC]
         I = engine.Fetch_Inst(p)
         # print "pc = %2x, inst = %s" % (p, I)
-        # print "assersions: %s" % S[arch.FIELD_STATE_ASSERT]
+        # print "assertions: %s" % S[arch.FIELD_STATE_ASSERT]
         # bp()
         S_new = engine.Exec(I, S)
         for S_prime in S_new:
@@ -392,13 +392,13 @@ def start_Execution_Loop(engine, find, avoid, find_hook=None):
                         SuccessStates += [S_second]
                         print "[*] reached to find (|SuccessStates| = %d)" % len(SuccessStates)
                     else:
-                        print "[!] reached to find. but unsat. ommiting this state"
+                        print "[!] reached to find. but unsat. omitting this state"
                         pass
                 else:
                     SuccessStates += [S_prime]
                     print "[*] reached to find (|SuccessStates| = %d)" % len(SuccessStates)
             elif next_pc in avoid:
-                print "[*] reached to avoid. ommiting this state"
+                print "[*] reached to avoid. omitting this state"
             else:
                 ActiveStates += [S_prime]
         if len(SuccessStates) > 4: # anti infinite loop

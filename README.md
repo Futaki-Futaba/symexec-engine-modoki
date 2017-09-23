@@ -3,14 +3,14 @@ Symbolic Execution Engine Modoki
 
 What is this?
 ----
-* this is Symblic Engine built on z3py
+* this is Symbolic Engine built on z3py
 * and well(?) designed for education scene
-* but there're very tight limitaons 
+* but there're very tight limitations 
     * for more information, see Limitations
 
 How to run?
 ----
-try runing test script:
+try running test script:
 
 ```bash
 ./test.py
@@ -28,12 +28,12 @@ Limitations
 Currently, engine targets following machine spec:
 
 * based on Intel architecture
-* supports x86_64 ISA parcially
+* supports x86_64 ISA partially
 * NO data memory (Only Code on memory)
 * NO stack
 
 ### instructions
-Following few intel x86_64 instructions are supported:
+Following few Intel x86_64 instructions are supported:
 
 * add
 * mov
@@ -66,7 +66,7 @@ insts = [
 each fileds means:
 
 ```python
-    # Instuction Fields (TDOO: Enum)
+    # Instruction Fields (TDOO: Enum)
     FIELD_INST_ADDR = 0     # instruction address
     FIELD_INST_SIZE = 1     # instruction byte size
     FIELD_INST_NAME = 2     # instruction name
@@ -78,7 +78,7 @@ each fileds means:
 ```
 
 ### registers 
-suppors:
+supports:
 
 * general registers: all
 * flag registers: ZF, SF
@@ -87,5 +87,5 @@ not supports:
 
 * flag registers: CF, OF, and so on
 
-### refactering 
-This is alpha version. Hard effort to refactering (including spell miss) is nedded.
+### refactoring 
+This is alpha version. Hard effort to refactoring (including spell miss) is needed.
