@@ -11,15 +11,21 @@ class arch(): # Base Architecture Class
     solver = None           # z3 solver instance
     _id = 0
 
-    # Instruction Fields (TDOO: Enum)
-    FIELD_INST_ADDR = 0     # instruction address
-    FIELD_INST_SIZE = 1     # instruction byte size
-    FIELD_INST_NAME = 2     # instruction name
-    FIELD_INST_RDST = 3     # destination register. if memory, None
-    FIELD_INST_RSRC = 4     # source register. if memory, None
-    FIELD_INST_IVAL = 5     # immediate value
-    FIELD_INST_MDST = 6     # future work (memory address or register name comes here for simplicity)
-    FIELD_INST_MSRC = 7     # future work
+    # decoded instruction format
+    FIELD_INST_ADDR = 0      # instruction address
+    FIELD_INST_SIZE = 1      # instruction byte size
+    FIELD_INST_OP_TYPE = 2   # instruction operand types
+    FIELD_INST_NAME = 3      # instruction name 
+    FIELD_INST_OP_DST = 4    # instrunction destination X
+    FIELD_INST_OP_SRC = 5    # instruction source X
+
+    # operand type
+    OP_TYPE_NOOP = 1 << 0       # no operands
+    OP_TYPE_RDST = 1 << 1       # destination register. if memory, None
+    OP_TYPE_RSRC = 1 << 2       # source register. if memory, None
+    OP_TYPE_IVAL = 1 << 3       # immediate value
+    OP_TYPE_MDST = 1 << 4       # future work (memory address or register name comes here for simplicity)
+    OP_TYPE_MSRC = 1 << 5       # future work
 
     # State Fields (TODO: Enum)
     FIELD_STATE_CURRPC = 0  # current pc (not looks ahead next instruction; not same as original PC register)
@@ -260,33 +266,40 @@ class x64(arch):
         # NOTE: I'm Considering only registers and immediate values now
         pc = state[self.FIELD_STATE_CURRPC]
         self.Restore_State(state)
+        print inst
         inst_name = inst[self.FIELD_INST_NAME]
+        inst_size = inst[self.FIELD_INST_SIZE]
+        inst_op_type = inst[self.FIELD_INST_OP_TYPE]
+        if inst_op_type & (self.OP_TYPE_RDST | self.OP_TYPE_IVAL):
+            inst_op_dst = inst[self.FIELD_INST_OP_DST]
+        if (inst_op_type & self.OP_TYPE_RDST) and (inst_op_type & (self.OP_TYPE_RSRC | self.OP_TYPE_IVAL)):
+            inst_op_src = inst[self.FIELD_INST_OP_SRC]
         if inst_name in ["add", "mov"]: # handle insts such as "dst = f(dst, src)"
-            if inst[self.FIELD_INST_RDST]:
-                dst = self.get_reg_symvar(inst[self.FIELD_INST_RDST])
-                src = None
-                if not inst[self.FIELD_INST_RSRC] == None:
-                    src = self.get_reg_symvar(inst[self.FIELD_INST_RSRC])
-                elif not inst[self.FIELD_INST_IVAL] == None:
-                    src = inst[self.FIELD_INST_IVAL]
-                else:
+            if inst_op_type & self.OP_TYPE_RDST:
+                dst = self.get_reg_symvar(inst[self.FIELD_INST_OP_DST])
+                if inst_op_src == None:
                     raise Exception("missing RSC/IVAL")
+                src = None
+                if inst_op_type & self.OP_TYPE_RSRC:
+                    src = self.get_reg_symvar(inst_op_src)
+                elif inst_op_type & self.OP_TYPE_IVAL:
+                    src = inst_op_src
                 try:
                     ret = self.call[inst_name](self, dst, src)
-                    self.store_reg_symvar(inst[self.FIELD_INST_RDST], ret) # update register symvar
+                    self.store_reg_symvar(inst_op_dst, ret) # update register symvar
                 except KeyError:
                     print "[!] unsupported inst_name: %s" % inst_name
                     exit(1)
-                return [self.Dump_State(pc + inst[self.FIELD_INST_SIZE], pc)]
+                return [self.Dump_State(pc + inst_size, pc)]
             raise Exception("RDST is not given: %s" % str(inst))
         if inst_name in ["cmp"]: # handle insts such as f(dst, src)
-            if inst[self.FIELD_INST_RDST]:
-                dst = self.get_reg_symvar(inst[self.FIELD_INST_RDST])
+            if inst_op_type & self.OP_TYPE_RDST:
+                dst = self.get_reg_symvar(inst_op_dst)
                 src = None
-                if not inst[self.FIELD_INST_RSRC] == None:
-                    src = self.get_reg_symvar(inst[self.FIELD_INST_RSRC])
-                elif not inst[self.FIELD_INST_IVAL] == None:
-                    src = inst[self.FIELD_INST_IVAL]
+                if inst_op_type & self.OP_TYPE_RSRC:
+                    src = self.get_reg_symvar(inst_op_src)
+                elif inst_op_type & self.OP_TYPE_IVAL:
+                    src = inst_op_src
                 else:
                     raise Exception("missing RSC/IVAL")
                 try:
@@ -294,26 +307,26 @@ class x64(arch):
                 except KeyError:
                     print "[!] unsupported inst_name: %s" % inst_name
                     exit(1)
-                return [self.Dump_State(pc + inst[self.FIELD_INST_SIZE], pc)]
+                return [self.Dump_State(pc + inst_size, pc)]
             raise Exception("RDST is not given: %s" % str(inst))
         elif inst_name in ["dec", "inc"]:
-            if inst[self.FIELD_INST_RDST]:
-                dst = self.get_reg_symvar(inst[self.FIELD_INST_RDST])
+            if inst_op_type & self.OP_TYPE_RDST:
+                dst = self.get_reg_symvar(inst_op_dst)
                 ret = self.call[inst_name](self, dst)
-                self.store_reg_symvar(inst[self.FIELD_INST_RDST], ret) # update register symvar
-                return [self.Dump_State(pc + inst[self.FIELD_INST_SIZE], pc)]
+                self.store_reg_symvar(inst_op_dst, ret) # update register symvar
+                return [self.Dump_State(pc + inst_size, pc)]
             raise Exception("RDST is not given: %s" % str(inst))
         elif inst_name in ["je", "jne", "jz", "jnz", "jg", "jl"]:
-            if not inst[self.FIELD_INST_IVAL] == None:
-                dst = inst[self.FIELD_INST_IVAL]
-                next_pc = pc + inst[self.FIELD_INST_SIZE]
+            if inst_op_type & self.OP_TYPE_IVAL:
+                dst = inst_op_dst
+                next_pc = pc + inst_size
                 ret = self.call[inst_name + "_imm"](self, dst, pc, next_pc)
                 # print ret # for debugging
                 # bp() # for debugging
                 return ret
             raise Exception("IVAL (immediate value) is not given: %s" % str(inst))
         elif inst_name in ["nop"]:
-            return [(pc + inst[self.FIELD_INST_SIZE], pc, 
+            return [(pc + inst_size, pc, 
                 state[self.FIELD_STATE_ASSERT], self.constrained_regs, self.constrained_flags)] # without copy
         else:
             raise NotImplementedError("unsupported instruction: %s" % str(inst))

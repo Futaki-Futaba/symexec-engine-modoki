@@ -28,15 +28,15 @@ def find_hook(engine, state):
 00000014  90                nop
 """
 insts = [
-    (0x0,   4, "cmp", "rsi", None, 1),
-    (0x4,   2, "jl", None, None, 8), # 0x6 + 8 = 0xe
-    (0x6,   3, "add", "rdx", "rdx"),
-    (0x9,   3, "dec", "rsi", None),
-    (0xc,   2, "jnz", None, None, -8), # 0xe - 8 = 0x6
-    (0xe,   3, "cmp", "rdx", "rax"),
-    (0x11,  2, "je", None, None, 1), # 0x13 + 1 = 0x14
-    (0x13,  1, "ret"),
-    (0x14,  1, "nop"),
+    (0x0,   4, arch.OP_TYPE_RDST | arch.OP_TYPE_IVAL, "cmp", "rsi", 1),
+    (0x4,   2, arch.OP_TYPE_IVAL, "jl", 8), # 0x6 + 8 = 0xe
+    (0x6,   3, arch.OP_TYPE_RDST | arch.OP_TYPE_RSRC, "add", "rdx", "rdx"),
+    (0x9,   3, arch.OP_TYPE_RDST, "dec", "rsi"),
+    (0xc,   2, arch.OP_TYPE_IVAL, "jnz", -8), # 0xe - 8 = 0x6
+    (0xe,   3, arch.OP_TYPE_RDST | arch.OP_TYPE_RSRC, "cmp", "rdx", "rax"),
+    (0x11,  2, arch.OP_TYPE_IVAL, "je", 1), # 0x13 + 1 = 0x14
+    (0x13,  1, arch.OP_TYPE_NOOP, "ret"),
+    (0x14,  1, arch.OP_TYPE_NOOP, "nop"),
 ]
 
 print "[*] we are going to execute following instructions:"

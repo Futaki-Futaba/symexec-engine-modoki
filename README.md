@@ -51,30 +51,36 @@ Instructions must be decoded like:
 
 ```python
 insts = [
-    (0x0,   4, "cmp", "rsi", None, 1),
-    (0x4,   2, "jl", None, None, 8), # 0x6 + 8 = 0xe
-    (0x6,   3, "add", "rdx", "rdx"),
-    (0x9,   3, "dec", "rsi", None),
-    (0xc,   2, "jnz", None, None, -8), # 0xe - 8 = 0x6
-    (0xe,   3, "cmp", "rdx", "rax"),
-    (0x11,  2, "je", None, None, 1), # 0x13 + 1 = 0x14
-    (0x13,  1, "ret"),
-    (0x14,  1, "nop"),
+    (0x0,   4, arch.OP_TYPE_RDST | arch.OP_TYPE_IVAL, "cmp", "rsi", 1),
+    (0x4,   2, arch.OP_TYPE_IVAL, "jl", 8), # 0x6 + 8 = 0xe
+    (0x6,   3, arch.OP_TYPE_RDST | arch.OP_TYPE_RSRC, "add", "rdx", "rdx"),
+    (0x9,   3, arch.OP_TYPE_RDST, "dec", "rsi"),
+    (0xc,   2, arch.OP_TYPE_IVAL, "jnz", -8), # 0xe - 8 = 0x6
+    (0xe,   3, arch.OP_TYPE_RDST | arch.OP_TYPE_RSRC, "cmp", "rdx", "rax"),
+    (0x11,  2, arch.OP_TYPE_IVAL, "je", 1), # 0x13 + 1 = 0x14
+    (0x13,  1, arch.OP_TYPE_NOOP, "ret"),
+    (0x14,  1, arch.OP_TYPE_NOOP, "nop"),
 ]
 ```
 
 each fileds means:
 
 ```python
-    # Instruction Fields (TDOO: Enum)
-    FIELD_INST_ADDR = 0     # instruction address
-    FIELD_INST_SIZE = 1     # instruction byte size
-    FIELD_INST_NAME = 2     # instruction name
-    FIELD_INST_RDST = 3     # destination register. if memory, None
-    FIELD_INST_RSRC = 4     # source register. if memory, None
-    FIELD_INST_IVAL = 5     # immediate value
-    FIELD_INST_MDST = 6     # future work (memory address or register name comes here for simplicity)
-    FIELD_INST_MSRC = 7     # future work
+    # decoded instruction format
+    FIELD_INST_ADDR = 0      # instruction address
+    FIELD_INST_SIZE = 1      # instruction byte size
+    FIELD_INST_OP_TYPE = 2   # instruction operand types
+    FIELD_INST_NAME = 3      # instruction name 
+    FIELD_INST_OP_DST = 4    # instrunction destination X
+    FIELD_INST_OP_SRC = 5    # instruction source X
+
+    # operand type
+    OP_TYPE_NOOP = 1 << 0       # no operands
+    OP_TYPE_RDST = 1 << 1       # destination register. if memory, None
+    OP_TYPE_RSRC = 1 << 2       # source register. if memory, None
+    OP_TYPE_IVAL = 1 << 3       # immediate value
+    OP_TYPE_MDST = 1 << 4       # future work (memory address or register name comes here for simplicity)
+    OP_TYPE_MSRC = 1 << 5       # future work    
 ```
 
 ### registers 
