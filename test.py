@@ -79,13 +79,14 @@ for S in SuccessStates:
     engine.Add_Constraint(new_constraints)
     # print "[*] assertions:"
     # print engine.Assertions()
-    print "[*] sat check:"
-    check_res = engine.Check()
-    print check_res
-    if not check_res == unsat:
+    while engine.Check() == sat:
+        print "[*] sat check:"        
+        print engine.Check()
         print "[*] solution for (rsi, rdx, rax):"
         m = engine.Get_Model()
         # print m
         print "rsi = " + str(m[rsi])
         print "rdx = " + str(m[rdx])
         print "rax = " + str(m[rax])
+        engine.Add_Constraint(Or(rsi != m[rsi], rdx != m[rdx], rax != m[rax]))
+

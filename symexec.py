@@ -65,9 +65,6 @@ class arch(): # Base Architecture Class
     def Get_Model(self):
         return self.solver.model()
 
-    def Get_Models(self):
-        raise NotImplementedError("TODO: Get_Models is not implemented")
-
     def store_reg_symvar(self, name, symvar):
         self.constrained_regs[name] = symvar
 
